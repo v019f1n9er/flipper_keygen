@@ -2,6 +2,8 @@
 #include <furi_hal.h>
 #include <dialogs/dialogs.h>
 #include <stdio.h>
+#include <storage/storage.h>
+#include <string.h>
 
 #define MIN_LENGTH 8
 #define MAX_LENGTH 20
@@ -21,6 +23,27 @@ void generate_password(char* buffer, int length) {
     buffer[length] = '\0'; // символ "стоп", чтобы не вызвать OOM
 }
 
+bool save_to_duckyscript(const char* password) {
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    File* file = storage_file_alloc(storage);
+
+    char script_buffer[64];
+    snprintf(script_buffer, sizeof(script_buffer), "DELAY 500\nSTRING %s\n", password);
+
+    bool success =
+        storage_file_open(file, "/ext/badusb/generated_key.txt", FSAM_WRITE, FSOM_CREATE_ALWAYS);
+
+    if(success) {
+        storage_file_write(file, script_buffer, strlen(script_buffer));
+        storage_file_close(file);
+    }
+
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+
+    return success;
+}
+
 int32_t hello_flipper_app(void* p) {
     UNUSED(p);
 
@@ -29,6 +52,7 @@ int32_t hello_flipper_app(void* p) {
     char header[32];
 
     generate_password(password, size_string); // вызов функции генерации пароля
+    save_to_duckyscript(password);
 
     DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS); // "ключ" системного сервиса
     DialogMessage* message = dialog_message_alloc(); // выделение памяти под окно
