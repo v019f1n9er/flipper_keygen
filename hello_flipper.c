@@ -5,9 +5,11 @@
 #include <storage/storage.h>
 #include <string.h>
 
+// границы длины пароля
 #define MIN_LENGTH 8
 #define MAX_LENGTH 20
 
+// функция генерации пароля
 void generate_password(char* buffer, int length) {
     for(int i = 0; i < length; i++) {
         uint32_t ochered = furi_hal_random_get() % 3; // аппаратный рандомайзер
@@ -23,6 +25,8 @@ void generate_password(char* buffer, int length) {
     buffer[length] = '\0'; // символ "стоп", чтобы не вызвать OOM
 }
 
+// функция сохранения модифицированного файла пароля
+// с возможность последующего ввода
 bool save_to_duckyscript(const char* password) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
@@ -44,6 +48,7 @@ bool save_to_duckyscript(const char* password) {
     return success;
 }
 
+// основная функция выполнения
 int32_t hello_flipper_app(void* p) {
     UNUSED(p);
 
@@ -52,13 +57,14 @@ int32_t hello_flipper_app(void* p) {
     char header[32];
 
     generate_password(password, size_string); // вызов функции генерации пароля
-    save_to_duckyscript(password);
+    save_to_duckyscript(password); // вызов функции сохранения файла с паролем
 
     DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS); // "ключ" системного сервиса
     DialogMessage* message = dialog_message_alloc(); // выделение памяти под окно
 
     dialog_message_set_buttons(message, "- Len", "New", "+ Len");
 
+    // функционал для расширенного использования кнопок
     bool running = true;
     while(running == true) {
         snprintf(header, sizeof(header), "Key length: %d", size_string);
