@@ -87,6 +87,7 @@ int32_t hello_flipper_app(void* p) {
         } else if(button == DialogMessageButtonCenter) {
             generate_password(password, size_string);
         } else if(button == DialogMessageButtonBack) {
+            save_to_duckyscript(password);
             running = false;
         }
     }
